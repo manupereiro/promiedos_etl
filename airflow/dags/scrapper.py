@@ -51,26 +51,34 @@ def get_local_score(tournament):
     scores = tournament.find_all("span", class_="scores_scoreseventresult__X_Y_1")
     if not scores:
         return []
-    if penalties_check(tournament.find("div", class_="result_block__8wTEO")):
-        penalties = tournament.find_all("span", class_="penalties_score__rF_Gk")
-        return [f"{scores[i].text} {penalties[0].text}" for i in range(len(scores)) if i % 2 == 0]
-    else:
-        return [scores[i].text for i in range(len(scores)) if i % 2 == 0]
+    result = []
+    for i in range(0, len(scores), 2):
+        match_div = scores[i].find_parent("div", class_="result_block__8wTEO")
+        if match_div and penalties_check(match_div):
+            penalties = match_div.find_all("span", class_="penalties_score__rF_Gk")
+            result.append(f"{scores[i].text} {penalties[0].text}")
+        else:
+            result.append(scores[i].text)
+    return result
 
 def get_visitor_score(tournament):
     """
     Obtain the visitor score from the tournament div.
     param tournament: BeautifulSoup object
-    return list of str
+    return: list of str
     """
     scores = tournament.find_all("span", class_="scores_scoreseventresult__X_Y_1")
     if not scores:
         return []
-    if penalties_check(tournament.find("div", class_="result_block__8wTEO")):
-        penalties = tournament.find_all("span", class_="penalties_score__rF_Gk")
-        return [f"{scores[i].text} {penalties[1].text}" for i in range(len(scores)) if i % 2 != 0]
-    else:
-        return [scores[i].text for i in range(len(scores)) if i % 2 != 0] 
+    result = []
+    for i in range(1, len(scores), 2):
+        match_div = scores[i].find_parent("div", class_="result_block__8wTEO")
+        if match_div and penalties_check(match_div):
+            penalties = match_div.find_all("span", class_="penalties_score__rF_Gk")
+            result.append(f"{scores[i].text} {penalties[1].text}")
+        else:
+            result.append(scores[i].text)
+    return result
 
 def get_local_scorers(tournament):
     """
@@ -312,7 +320,7 @@ def get_dataframe(dictionary):
     
     return df
 
-def main():
+def run_scraper():
     # Set up headless browser
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -381,11 +389,16 @@ def main():
     
     # Combine all dictionaries into a single DataFrame
     combined_df = pd.concat([get_dataframe(d) for d in all_data], ignore_index=True)
-    print(combined_df)
+    csv_filename = f"matches_{day}.csv"
+    combined_df.to_csv(csv_filename, index=False)
     
     driver.quit()
     
     driver.quit()
 
+    return csv_filename
+
 if __name__ == "__main__":
-    main()
+    csv_file = run_scraper()
+    if csv_file:
+        print(f"CSV file generated: {csv_file}")

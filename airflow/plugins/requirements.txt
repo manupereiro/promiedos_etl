@@ -1,0 +1,6 @@
+apache-airflow
+apache-airflow-providers-google
+requests
+beautifulsoup4
+pandas
+google-cloud-storage

@@ -1,0 +1,15 @@
+services:
+  sleek-airflow:
+    build:
+      context: .
+      dockerfile: dockerfile
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./google_credentials.json:/opt/airflow/google_credentials.json  # Mount GCP credentials
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/opt/airflow/google_credentials.json
+      - GCP_PROJECT_ID=promiedos-etl  # Replace with your project ID
+    ports:
+      - "8080:8080"
+    command: airflow standalone
